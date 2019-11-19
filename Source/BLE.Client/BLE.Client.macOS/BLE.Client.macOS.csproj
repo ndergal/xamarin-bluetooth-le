@@ -94,13 +94,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Acr.UserDialogs">
-      <Version>7.0.4</Version>
+      <Version>7.0.35</Version>
     </PackageReference>
     <PackageReference Include="MvvmCross">
-      <Version>6.3.1</Version>
+      <Version>6.4.1</Version>
     </PackageReference>
     <PackageReference Include="MvvmCross.Forms">
-      <Version>6.3.1</Version>
+      <Version>6.4.1</Version>
     </PackageReference>
     <PackageReference Include="Plugin.Permissions">
       <Version>3.0.0.12</Version>
@@ -109,7 +109,7 @@
       <Version>3.1.1</Version>
     </PackageReference>
     <PackageReference Include="Xamarin.Forms">
-      <Version>4.2.0.709249</Version>
+      <Version>4.3.0.991211</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
