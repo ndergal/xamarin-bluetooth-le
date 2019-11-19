@@ -14,6 +14,9 @@ using Plugin.BLE.Extensions;
 using Object = Java.Lang.Object;
 using Trace = Plugin.BLE.Abstractions.Trace;
 using Android.App;
+using Android.Content;
+using Plugin.BLE.BroadcastReceivers;
+using Plugin.BLE.Abstractions.EventArgs;
 
 namespace Plugin.BLE.Android
 {
@@ -29,17 +32,15 @@ namespace Plugin.BLE.Android
             _bluetoothManager = bluetoothManager;
             _bluetoothAdapter = bluetoothManager.Adapter;
 
-
             // TODO: bonding
-            //var bondStatusBroadcastReceiver = new BondStatusBroadcastReceiver();
-            //Application.Context.RegisterReceiver(bondStatusBroadcastReceiver,
-            //    new IntentFilter(BluetoothDevice.ActionBondStateChanged));
+            var bondStatusBroadcastReceiver = new BondStatusBroadcastReceiver();
+            Application.Context.RegisterReceiver(bondStatusBroadcastReceiver, new IntentFilter(BluetoothDevice.ActionBondStateChanged));
 
-            ////forward events from broadcast receiver
-            //bondStatusBroadcastReceiver.BondStateChanged += (s, args) =>
-            //{
-            //    //DeviceBondStateChanged(this, args);
-            //};
+            //forward events from broadcast receiver
+            bondStatusBroadcastReceiver.BondStateChanged += (s, args) =>
+            {
+                DeviceBondStateChanged(this, args);
+            };
 
             if (Build.VERSION.SdkInt >= BuildVersionCodes.Lollipop)
             {
@@ -49,6 +50,11 @@ namespace Plugin.BLE.Android
             {
                 _api18ScanCallback = new Api18BleScanCallback(this);
             }
+        }
+
+        private void DeviceBondStateChanged(Adapter adapter, DeviceBondStateChangedEventArgs args)
+        {
+            Console.WriteLine($"Device {args.Device} bond state changed: {args.State}");
         }
 
         protected override Task StartScanningForDevicesNativeAsync(Guid[] serviceUuids, bool allowDuplicatesKey, CancellationToken scanCancellationToken)
@@ -167,6 +173,12 @@ namespace Plugin.BLE.Android
             var bondedDevices = _bluetoothAdapter.BondedDevices.Where(d => d.Type == BluetoothDeviceType.Le || d.Type == BluetoothDeviceType.Dual);
 
             return connectedDevices.Union(bondedDevices, new DeviceComparer()).Select(d => new Device(this, d, null, 0)).Cast<IDevice>().ToList();
+        }
+
+        protected override Task PairAndConnectToDeviceNativeAsync(IDevice device, CancellationToken cancellationToken)
+        {
+            ((Device)device).Pair(cancellationToken);
+            return Task.CompletedTask;
         }
 
         private class DeviceComparer : IEqualityComparer<BluetoothDevice>

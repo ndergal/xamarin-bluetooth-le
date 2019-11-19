@@ -53,8 +53,7 @@ namespace Plugin.BLE.Android
 
             BluetoothDevice = nativeDevice;
             _gatt = gatt;
-
-
+            
             Id = ParseDeviceId();
             Name = BluetoothDevice.Name;
         }
@@ -101,6 +100,17 @@ namespace Plugin.BLE.Android
             }
         }
 
+        public void Pair(CancellationToken cancellationToken)
+        {
+            // To bond
+            if (BluetoothDevice.BondState == Bond.None)
+            {
+                var isCreatingBond = BluetoothDevice.CreateBond();
+
+                Console.WriteLine($"Is creating bond? : {isCreatingBond}");
+            }
+        }
+
         private void ConnectToGattForceBleTransportAPI(bool autoconnect, CancellationToken cancellationToken)
         {
             //This parameter is present from API 18 but only public from API 23
@@ -129,7 +139,6 @@ namespace Plugin.BLE.Android
                 _connectCancellationTokenRegistration.Dispose();
                 _connectCancellationTokenRegistration = cancellationToken.Register(() => connectGatt.Disconnect());
             }
-
         }
 
         /// <summary>

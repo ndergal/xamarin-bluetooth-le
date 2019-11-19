@@ -126,5 +126,12 @@ namespace Plugin.BLE.Abstractions.Contracts
         /// <param name="services">IMPORTANT: Only considered by iOS due to platform limitations. Filters devices by advertised services. SET THIS VALUE FOR ANY RESULTS</param>
         /// <returns>List of IDevices connected to the OS.  In case of no devices the list is empty.</returns>
         IReadOnlyList<IDevice> GetSystemConnectedOrPairedDevices(Guid[] services = null);
+
+        /// <summary>
+        /// Pair to a device. This process shows a specific platform message to accept the pairing.
+        /// </summary>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        Task PairToDeviceAsync(IDevice device, CancellationToken cancellationToken = default);
     }
 }

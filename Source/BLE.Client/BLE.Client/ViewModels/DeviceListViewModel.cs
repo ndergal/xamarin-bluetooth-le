@@ -45,6 +45,8 @@ namespace BLE.Client.ViewModels
 
         public MvxCommand<DeviceListItemViewModel> ConnectDisposeCommand => new MvxCommand<DeviceListItemViewModel>(ConnectAndDisposeDevice);
 
+        public MvxCommand<DeviceListItemViewModel> BondAndConnectCommand => new MvxCommand<DeviceListItemViewModel>(PairAndConnectDevice);
+
         public ObservableCollection<DeviceListItemViewModel> Devices { get; set; } = new ObservableCollection<DeviceListItemViewModel>();
         public bool IsRefreshing => Adapter.IsScanning;
         public bool IsStateOn => _bluetoothLe.IsOn;
@@ -347,6 +349,8 @@ namespace BLE.Client.ViewModels
                 });
 
                 config.Add("Connect & Dispose", () => ConnectDisposeCommand.Execute(device));
+
+                config.Add("Pair and connect", () => BondAndConnectCommand.Execute(device));
             }
 
             config.Add("Copy GUID", () => CopyGuidCommand.Execute(device));
@@ -495,8 +499,24 @@ namespace BLE.Client.ViewModels
             {
                 _userDialogs.HideLoading();
             }
+        }
 
+        private async void PairAndConnectDevice(DeviceListItemViewModel item)
+        {
+            try
+            {
+                _userDialogs.ShowLoading($"Pairing to {item.Name} ...");
 
+                await Adapter.PairToDeviceAsync(item.Device);
+            }
+            catch (Exception ex)
+            {
+                await _userDialogs.AlertAsync(ex.Message, "Failed to connect and dispose.");
+            }
+            finally
+            {
+                _userDialogs.HideLoading();
+            }
         }
 
         private void OnDeviceDisconnected(object sender, DeviceEventArgs e)

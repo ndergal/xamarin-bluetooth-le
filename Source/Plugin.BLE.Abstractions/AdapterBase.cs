@@ -135,6 +135,49 @@ namespace Plugin.BLE.Abstractions
             }
         }
 
+        public async Task PairToDeviceAsync(IDevice device, CancellationToken cancellationToken = default)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            if (device.State == DeviceState.Connected)
+                return;
+
+            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                await TaskBuilder.FromEvent<bool, EventHandler<DeviceEventArgs>, EventHandler<DeviceErrorEventArgs>>(
+                    execute: () =>
+                    {
+                        PairAndConnectToDeviceNativeAsync(device, cts.Token);
+                    },
+
+                    getCompleteHandler: (complete, reject) => (sender, args) =>
+                    {
+                        if (args.Device.Id == device.Id)
+                        {
+                            Trace.Message("PairToDeviceAsync : {0} {1}", args.Device.Id, args.Device.Name);
+                            complete(true);
+                        }
+                    },
+                    subscribeComplete: handler => DeviceConnected += handler,
+                    unsubscribeComplete: handler => DeviceConnected -= handler,
+
+                    getRejectHandler: reject => (sender, args) =>
+                    {
+                        if (args.Device?.Id == device.Id)
+                        {
+                            Trace.Message("PairToDeviceAsync Error: {0} {1}", args.Device?.Id, args.Device?.Name);
+                            reject(new DeviceConnectionException((Guid)args.Device?.Id, args.Device?.Name,
+                                args.ErrorMessage));
+                        }
+                    },
+
+                    subscribeReject: handler => DeviceConnectionError += handler,
+                    unsubscribeReject: handler => DeviceConnectionError -= handler,
+                    token: cts.Token);
+            }
+        }
+
         public Task DisconnectDeviceAsync(IDevice device)
         {
             if (!ConnectedDevices.Contains(device))
@@ -239,5 +282,7 @@ namespace Plugin.BLE.Abstractions
 
         public abstract Task<IDevice> ConnectToKnownDeviceAsync(Guid deviceGuid, ConnectParameters connectParameters = default, CancellationToken cancellationToken = default);
         public abstract IReadOnlyList<IDevice> GetSystemConnectedOrPairedDevices(Guid[] services = null);
+
+        protected abstract Task PairAndConnectToDeviceNativeAsync(IDevice device, CancellationToken cancellationToken);
     }
 }

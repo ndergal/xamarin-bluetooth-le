@@ -46,5 +46,11 @@ namespace Plugin.BLE.Abstractions.Utils
             TraceUnavailability();
             return new List<IDevice>();
         }
+
+        protected override Task PairAndConnectToDeviceNativeAsync(IDevice device, CancellationToken cancellationToken)
+        {
+            TraceUnavailability();
+            return Task.FromResult(0);
+        }
     }
 }
